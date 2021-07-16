@@ -12,7 +12,18 @@ document.querySelector('#posts').addEventListener('click',deletePost);
 document.querySelector('#posts').addEventListener('click',enableEdit);
 //Listen for cancel
 document.querySelector('.card-form').addEventListener('click',cancelEdit);
-//listen for update
+//Listen for keydown event on the form input to validate that shit
+document.querySelector('#title').addEventListener('keyup',removeTitleValidation);
+document.querySelector('#body').addEventListener('keyup',removeBodyValidation);
+//these two vars is just for validation purpose
+const titleNode =  document.querySelector('#title');
+const bodyNode= document.querySelector('#body');
+
+//App initialization
+(function(){
+    document.querySelector('.invalid-id').style.display='none';
+    document.querySelector('.invalid-body').style.display='none';
+})();
 
 function getPosts(){
     http.get('http://localhost:3000/posts')
@@ -26,35 +37,57 @@ function submitPost(){
     const id = document.querySelector('#id').value;
 
     //Validation
-    
-    const data = {
-        title,
-        body
-    }
-    //check for id if the id is null that means the post is not in update state
-    //check in changeFormStateFunction in Ui component that we set id first before updarting
-    if(id===''){
-        //Create post
-        http.post('http://localhost:3000/posts',data)
-        .then(data=>{
-            ui.showAlert('Post Added!!','alert alert-success');
-            ui.clearFields();
-            getPosts();
-        })
-        .catch(err=> console.log(data));
+    if(title==='' || body==''){
+        const titleValidity = document.querySelector('.invalid-id');
+        const bodyValidity=document.querySelector('.invalid-body');
+        if(title===''&&body===''){
+            titleValidity.style.display='block';
+            bodyValidity.style.display='block';
+            titleNode.classList.add('is-invalid');
+            bodyNode.classList.add('is-invalid');
+            titleValidity.className='invalid-feedback invalid-id';
+            bodyValidity.className='invalid-feedback invalid-body';
+        }
+        else if(title===''){
+            titleValidity.style.display='block';
+            titleNode.classList.add('is-invalid');
+            titleValidity.className='invalid-feedback invalid-id';
+        }
+        else{
+            bodyValidity.style.display='block';
+            bodyValidity.className='invalid-feedback';
+            bodyValidity.className='invalid-feedback invalid-body';
+        }
     }
     else{
-        //update post
-    
-        http.put(`http://localhost:3000/posts/${id}`,data)
-        .then(data=>{
-            ui.showAlert('Post Updated!!','alert alert-success');
-            ui.changeFormState('add');
-            getPosts();
-        })
-        .catch(err=> console.log(data));
+        const data = {
+            title,
+            body
+        }
+        //check for id if the id is null that means the post is not in update state
+        //check in changeFormStateFunction in Ui component that we set id first before updarting
+        if(id===''){
+            //Create post
+            http.post('http://localhost:3000/posts',data)
+            .then(data=>{
+                ui.showAlert('Post Added!!','alert alert-success');
+                ui.clearFields();
+                getPosts();
+            })
+            .catch(err=> console.log(data));
+        }
+        else{
+            //update post
+        
+            http.put(`http://localhost:3000/posts/${id}`,data)
+            .then(data=>{
+                ui.showAlert('Post Updated!!','alert alert-success');
+                ui.changeFormState('add');
+                getPosts();
+            })
+            .catch(err=> console.log(data));
+        }
     }
-
 }
 
 function deletePost(e){
@@ -98,4 +131,15 @@ function cancelEdit(e){
         ui.changeFormState('add');
     }
     e.preventDefault();
+}
+
+//validation
+function removeTitleValidation(){
+    titleNode.classList.remove('is-invalid');
+    document.querySelector('.invalid-id').style.display='none';
+}
+
+function removeBodyValidation(){
+    bodyNode.classList.remove('is-invalid');
+    document.querySelector('.invalid-body').style.display='none';
 }
